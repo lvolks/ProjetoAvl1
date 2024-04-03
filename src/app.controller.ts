@@ -75,7 +75,7 @@ export class AppController {
   // ------------------------------------ PUT --------------------------------------
 
   @Put("/product")
-  async putBooking(
+  async putProduct(
     @Query("id") id: number,
     @Body() body: ProductDTO
   ): Promise<ResponseUpdateProduct> {
