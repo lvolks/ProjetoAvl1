@@ -9,6 +9,20 @@ export class AppService {
     @InjectModel(Product)
     private product: typeof Product
   ) {}
+  
+  // ------------------------------------ SERVICE POST --------------------------------------
+
+  async createProduct(data: ProductDTO) {
+    return this.product.create({
+      name: data.name,
+      company: data.company,
+      description: data.description,
+      quantity: data.quantity,
+      brand: data.brand,
+      value: data.value,
+    });
+  }
+
 
   // ------------------------------------ SERVICE PUT --------------------------------------
 
