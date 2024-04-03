@@ -46,9 +46,9 @@ export class AppController {
   }
 
   @Get("/product/:id")
-  async getProductById(@Param("id") id: number): Promise<Product[]> {
+  async getProductById(@Param("id") id: number): Promise<Product> {
     this.validateId(id);
-    return this.product.findAll({
+    return this.product.findOne({
       where: {
         id,
       },
@@ -58,9 +58,9 @@ export class AppController {
   @Get("/product-search")
   async searchProduct(
     @Query("name") name: string
-  ): Promise<Product[]> {
+  ): Promise<Product> {
     this.validateName(name)
-    return this.product.findAll({
+    return this.product.findOne({
       where: {
         name,
       },
