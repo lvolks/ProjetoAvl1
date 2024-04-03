@@ -13,9 +13,8 @@ import {
 import { AppService } from "./app.service";
 import { InjectModel } from "@nestjs/sequelize";
 import { Product } from "./models/Product";
-import { ResponseCreateProduct } from "./dtos/RespondeCreateProduct";
 import { ProductDTO } from "./dtos/ProductDTO";
-import { ResponseUpdateProduct } from "./dtos/RespondeUpdateProduct";
+import { ProductResponse } from "./dtos/ProductResponse";
 
 @Controller()
 export class AppController {
@@ -31,18 +30,12 @@ export class AppController {
 
   @Post("/product")
   async createProduct(
-    @Body() postData: ProductDTO
-  ): Promise<ResponseCreateProduct> {
-    await this.product.create({
-      name: postData.name,
-      company: postData.company,
-      description: postData.description,
-      quantity: postData.quantity,
-      brand: postData.brand,
-      value: postData.value,
-    });
+    @Body() body: ProductDTO
+  ) {
+    this.validateProductBody(body);
+    const data = await this.appService.createProduct(body)
 
-    return new ResponseCreateProduct("Produto inserido com sucesso", postData);
+    return new ProductResponse("Produto inserido com sucesso", data);
   }
 
   // ------------------------------------ GET --------------------------------------
@@ -54,6 +47,7 @@ export class AppController {
 
   @Get("/product/:id")
   async getProductById(@Param("id") id: number): Promise<Product[]> {
+    this.validateId(id);
     return this.product.findAll({
       where: {
         id,
@@ -61,10 +55,11 @@ export class AppController {
     });
   }
 
-  @Get("/product-querystring")
-  async getProductByQueryString(
+  @Get("/product-search")
+  async searchProduct(
     @Query("name") name: string
   ): Promise<Product[]> {
+    this.validateName(name)
     return this.product.findAll({
       where: {
         name,
@@ -74,38 +69,32 @@ export class AppController {
 
   // ------------------------------------ PUT --------------------------------------
 
-  @Put("/product")
-  async putBooking(
-    @Query("id") id: number,
+  @Put("/product/:id")
+  async putBook(
+    @Param("id") id: number,
     @Body() body: ProductDTO
-  ): Promise<ResponseUpdateProduct> {
-    this.validation(id, body);
+  ) {
+    this.validateId(id);
+    this.validateProductBody(body);
 
-    return new ResponseUpdateProduct(
-      await this.appService.putProduct(id, body)
-    );
+    const updatedProduct = await this.appService.putProduct(id, body)
+
+    return new ProductResponse("Produto atualizado com sucesso", updatedProduct);
   }
 
   // ------------------------------------ DELETE --------------------------------------
 
-  @Delete("/product")
-  async deleteProduct(@Query("id") id: number) {
-    this.validationIdElement(id);
+  @Delete("/product/:id")
+  async deleteProduct(@Param("id") id: number) {
+    this.validateId(id);
     await this.appService.deleteProduct(id);
 
-    return {
-      message: 'Produto removido com sucesso'
-    };
+    return new ProductResponse("Produto removido com sucesso", null);
   }
 
   // ------------------------------------ VALIDATIONS --------------------------------------
 
-  private validation(id: number, body: ProductDTO) {
-    this.validationIdElement(id);
-    this.validationBody(body);
-  }
-
-  private validationIdElement(id: number) {
+  private validateId(id: number) {
     if (!id) {
       throw new HttpException(
         "Bad request: Id não está presente",
@@ -114,7 +103,16 @@ export class AppController {
     }
   }
 
-  private validationBody(body: ProductDTO) {
+  private validateName(name: string) {
+    if (!name) {
+      throw new HttpException(
+        "Bad request: name não está presente",
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  private validateProductBody(body: ProductDTO) {
     if (
       !body.name ||
       !body.company ||

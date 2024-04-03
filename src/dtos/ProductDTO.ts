@@ -6,3 +6,6 @@ export class ProductDTO {
     public brand: string;
     public value: string;
   }
+
+
+
